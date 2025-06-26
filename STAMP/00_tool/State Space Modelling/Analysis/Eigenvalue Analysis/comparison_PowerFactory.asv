@@ -1,0 +1,11 @@
+T_PF = readtable("modes_digsilent.xlsx");
+
+T_PF=T_PF(~any(ismissing(T_PF),2),:);
+
+D = eig(ss_sys.A);
+figure
+scatter(real(D),imag(D))
+hold on
+scatter(real(D_rms),imag(D_rms),'mar')
+hold on
+scatter(T_PF{:,2},T_PF{:,3},'marker','x')

@@ -1,0 +1,60 @@
+function shunt_RLC = build_RLC(number,Rshunt, Lshunt, Cshunt, bus,wb,u,Vg2l,Il2g)
+
+if u==1
+    if Lshunt~=0
+        Cshunt
+        Rshunt
+        A = [0 -wb 1/Cshunt 0;
+            wb 0 0 1/Cshunt;
+            -1/Lshunt 0 -Rshunt/Lshunt -wb; 
+             0 -1/Lshunt wb -Rshunt/Lshunt];
+    
+        B = [0 0;
+             0 0; 
+             1/Lshunt 0;
+             0 1/Lshunt]/Vg2l;
+        
+         C = [0 0 1 0;
+              0 0 0 1]/Il2g;
+             
+        D = [0 0;
+             0 0]/Vg2l/Il2g;
+    elseif Lshunt==0
+        
+        A = [-1/(Rshunt*Cshunt) -wb 0 0
+              wb 1/(Rshunt*Cshunt) 0 0
+              0 0 0 0
+              0 0 0 0];
+    
+        B = [1/(Rshunt*Cshunt) 0;
+             0 1/(Rshunt*Cshunt); 
+             0 0;
+             0 0]/Vg2l;
+        
+         C = [-1/Rshunt 0 0 0;
+              0 -1/Rshunt 0 0]/Il2g;
+             
+        D = [1/Rshunt 0;
+             0 1/Rshunt]/Vg2l/Il2g;
+    end
+else
+    A = zeros(4);
+    B = zeros(4,2);
+    C = zeros(4);
+    D = zeros(2);
+end
+
+  
+    x = {join(['Shunt',num2str(number),'.vC_RLCq']) ;... 
+         join(['Shunt',num2str(number),'.vC_RLCd']) ;...
+         join(['Shunt',num2str(number),'.iL_RLCq']) ;...
+         join(['Shunt',num2str(number),'.iL_RLCd']) ; } ;
+
+    u = {join(['NET.vn',num2str(bus),'q']) ;... 
+         join(['NET.vn',num2str(bus),'d']);} ;
+
+    y = {join(['Shunt',num2str(number),'.iq']) ;... 
+         join(['Shunt',num2str(number),'.id']) ; } ;
+         
+    shunt_RLC = ss(A,B,C,D,'StateName',x,'inputname',u,'outputname',y);
+end

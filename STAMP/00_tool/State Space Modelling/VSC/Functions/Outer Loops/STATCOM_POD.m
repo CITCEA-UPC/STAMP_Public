@@ -1,0 +1,8 @@
+function ss_POD = STATCOM_POD(T,TLPF,T1,T2,NAMEIN,NAMEOUT,NUMBER)
+
+    LPF_filter = STATCOM_SS_LPF(TLPF,NAMEIN,'STATCOM_Power_LPF',NUMBER);
+    washout_filter = STATCOM_SS_WASHOUTFILTER(T,'STATCOM_Power_LPF','STATCOM_WashOut',NUMBER);
+    leadlag = STATCOM_SS_LEADLAG(T1,T2,'STATCOM_WashOut',NAMEOUT,NUMBER,1);
+
+    ss_POD = connect(LPF_filter,washout_filter,leadlag,NAMEIN,NAMEOUT);
+end

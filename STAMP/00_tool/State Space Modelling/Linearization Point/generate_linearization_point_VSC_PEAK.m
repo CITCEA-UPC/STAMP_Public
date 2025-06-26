@@ -1,0 +1,348 @@
+%% Calculates the linearization point per each MMC
+function lp_vsc = generate_linearization_point_VSC_PEAK(T_VSC, T_global, delta_slk_ll)
+
+lp_vsc = cell(1,height(T_VSC));
+
+    for vsc = 1:1:height(T_VSC)
+
+        Svsc = T_VSC.Sb(vsc);       % SG rated power, SG power base  
+        Sb  = T_global.Sb(T_global.Area == T_VSC.Area(vsc)); % System power base
+        delta_slk = delta_slk_ll(T_VSC.Area(vsc));
+        
+        Rtr = T_VSC.Rtr(vsc);
+        Xtr = T_VSC.Xtr(vsc);
+        Rc  = T_VSC.Rc(vsc);
+        Xc  = T_VSC.Xc(vsc);
+
+        Rtr_g = T_VSC.Rtr(vsc)/T_VSC.Sbpu_l2g(vsc);
+        Xtr_g = T_VSC.Xtr(vsc)/T_VSC.Sbpu_l2g(vsc);
+        Rc_g = T_VSC.Rc(vsc)/T_VSC.Sbpu_l2g(vsc);
+        Xc_g = T_VSC.Xc(vsc)/T_VSC.Sbpu_l2g(vsc);
+        Rac_g = T_VSC.Rac(vsc)/T_VSC.Sbpu_l2g(vsc);
+        Cac_g = T_VSC.Cac(vsc)*T_VSC.Sbpu_l2g(vsc); 
+
+        %Data from the power-flow
+        delta0   = T_VSC.theta(vsc)*pi/180;
+        %Vg       = T_VSC.V(vsc)/sqrt(3)/T_VSC.Vbpu_l2g(vsc); 
+        Vg       = T_VSC.V(vsc)/sqrt(3)/1;
+        Pvsc0    = T_VSC.P(vsc)*(Sb/Svsc);
+        Qvsc0    = T_VSC.Q(vsc)*(Sb/Svsc);
+
+        Pvsc0_g  = T_VSC.P(vsc);
+        Qvsc0_g    = T_VSC.Q(vsc);
+
+        mode = T_VSC.mode{:};
+
+        switch mode
+
+            case 'GFOL'   
+
+                Cac = T_VSC.Cac(vsc);
+                Rac = T_VSC.Rac(vsc);
+                wb = T_VSC.wb(vsc);
+
+                % Calculation of voltages and currents (REF: NET-POC)
+                
+                if T_VSC.Cac(vsc)
+
+                    % RLC filter
+                    Ig       = conj((Pvsc0+1i*Qvsc0)./(3*Vg));  % Transformer current 
+                    phi      = atan2(imag(Ig),real(Ig));        % angle of transformer current
+                    U        = Vg + Ig*(Rtr+1i*Xtr);            % Voltage at capacitor bus
+                    theta_in = atan2(imag(U),real(U));          % angle between POC and capacitor bus
+                    Icap     = U/(Rac-1i/(wb*Cac));             % current through capacitor
+                    Ucap     = U - Rac*Icap;
+                    theta_ucap = atan2(imag(Ucap),real(Ucap));
+                    Is       = Ig + Icap;                       % converter filter current
+                    phi_is   = atan2(imag(Is),real(Is));
+                    Vc       = U + Is*(Rc+1i*Xc);               % voltage applied by the converter
+                    theta_vc = atan2(imag(Vc),real(Vc)); 
+
+                else
+
+                    % RL filter (no capacitor)
+                    Is       = conj((Pvsc0+1i*Qvsc0)./(3*Vg));  % converter filter current
+                    phi_is      = atan2(imag(Is),real(Is));     % angle of converter filter current
+                    U        = Vg + Is*(Rtr+1i*Xtr);            % Voltage at capacitor bus
+                    theta_in = atan2(imag(U),real(U));          % angle between POC and capacitor bus                
+                    Vc       = U + Is*(Rc+1i*Xc);               % voltage applied by the converter
+                    theta_vc = atan2(imag(Vc),real(Vc));
+
+                    % Additional variables
+                    Ig = Is;
+                    phi = phi_is;
+                    Ucap = U;
+                    theta_ucap = 0;
+                end
+                
+            case 'GFOR'
+
+                Cac = T_VSC.Cac(vsc);
+                Rac = T_VSC.Rac(vsc);
+                wb = T_VSC.wb(vsc);
+
+                % Calculation of voltages and currents (REF: NET-POC)
+                Ig       = conj((Pvsc0+1i*Qvsc0)./(3*Vg));  % Transformer current 
+                phi      = atan2(imag(Ig),real(Ig));        % angle of transformer current
+                U        = Vg + Ig*(Rtr+1i*Xtr);            % Voltage at capacitor bus
+                theta_in = atan2(imag(U),real(U));          % angle between POC and capacitor bus
+                Icap     = U/(Rac-1i/(wb*Cac));             % current through capacitor
+                Ucap     = U - Rac*Icap;
+                theta_ucap = atan2(imag(Ucap),real(Ucap));
+                Is       = Ig + Icap;                       % converter filter current
+                phi_is   = atan2(imag(Is),real(Is));
+                Vc       = U + Is*(Rc+1i*Xc);               % voltage applied by the converter
+                theta_vc = atan2(imag(Vc),real(Vc));     
+
+            case 'STATCOM'
+                Cac = T_VSC.Cac(vsc);
+                Rac = T_VSC.Rac(vsc);
+                wb = T_VSC.wb(vsc);
+
+                % Calculation of voltages and currents (REF: NET-POC)
+                
+                if T_VSC.Cac(vsc)
+
+                    % RLC filter
+                    Ig       = conj((Pvsc0+1i*Qvsc0)./(3*Vg));  % Transformer current 
+                    phi      = atan2(imag(Ig),real(Ig));        % angle of transformer current
+                    U        = Vg + Ig*(Rtr+1i*Xtr);            % Voltage at capacitor bus
+                    theta_in = atan2(imag(U),real(U));          % angle between POC and capacitor bus
+                    Icap     = U/(Rac-1i/(wb*Cac));             % current through capacitor
+                    Ucap     = U - Rac*Icap;
+                    theta_ucap = atan2(imag(Ucap),real(Ucap));
+                    Is       = Ig + Icap;                       % converter filter current
+                    phi_is   = atan2(imag(Is),real(Is));
+                    Vc       = U + Is*(Rc+1i*Xc);               % voltage applied by the converter
+                    theta_vc = atan2(imag(Vc),real(Vc)); 
+
+                else
+
+                    % RL filter (no capacitor)
+                    Is       = conj((Pvsc0+1i*Qvsc0)./(3*Vg));  % converter filter current
+                    phi_is      = atan2(imag(Is),real(Is));     % angle of converter filter current
+                    U        = Vg + Is*(Rtr+1i*Xtr);            % Voltage at capacitor bus
+                    theta_in = atan2(imag(U),real(U));          % angle between POC and capacitor bus                
+                    Vc       = U + Is*(Rc+1i*Xc);               % voltage applied by the converter
+                    theta_vc = atan2(imag(Vc),real(Vc));
+
+                    % Additional variables
+                    Ig = Is;
+                    phi = phi_is;
+                    Ucap = U;
+                    theta_ucap = 0;
+                end
+        
+
+        case 'WT'
+                Cac = T_VSC.Cac(vsc);
+                Rac = T_VSC.Rac(vsc);
+                wb = T_VSC.wb(vsc);
+                % Calculation of voltages and currents (REF: NET-POC)
+                
+                if T_VSC.Cac(vsc)
+                    %LOCAL per unit BASE:
+                    % RLC filter
+                    Ig       = conj((Pvsc0+1i*Qvsc0)./(3*Vg));  % Transformer current 
+                    phi      = atan2(imag(Ig),real(Ig));        % angle of transformer current
+                    U        = Vg + Ig*(Rtr+1i*Xtr);            % Voltage at capacitor bus
+                    theta_in = atan2(imag(U),real(U));          % angle between POC and capacitor bus
+
+                    % Need to include the filters deviation!
+                    % Butterworth filter:
+                    if T_VSC.fc(vsc) == -1 || T_VSC.fc(vsc) == 0
+                         phase_btwf = 0;
+                    else
+                        [Ass,Bss,Css,Dss] = butter(2,T_VSC.fc(vsc)*2*pi,'low','s');
+                        x = {'x1';'x2'};
+                        u = {'u'};
+                        y = {'y'};
+                        btw_filter = ss(Ass,Bss,Css,Dss,'statename',x,'inputname',u,'outputname',y);
+                        [mag,phase,wout] = bode(btw_filter,2*pi*50);
+                        phase_btwf = phase*pi/180;
+                    end
+
+                    % Zero-order-hold:
+                    if T_VSC.tau_zoh(vsc) == -1 
+                        phase_zoh = 0;
+                    else
+                        a = [20*T_VSC.tau_zoh(vsc)^2 -60*T_VSC.tau_zoh(vsc) +840];
+                        b = [60*T_VSC.tau_zoh(vsc)^2 +360*T_VSC.tau_zoh(vsc) +840];
+                        [Ass,Bss,Css,Dss] = tf2ss(a,b);
+                        x = {'x1';'x2'};
+                        u = {'u'};
+                        y = {'y'};
+                        zoh = ss(Ass,Bss,Css,Dss,'statename',x,'inputname',u,'outputname',y);
+                        [mag,phase,wout] = bode(zoh,2*pi*50);
+                        phase_zoh = phase*pi/180-2*pi;
+                        %phase_zoh = -pi*50*T_VSC.tau_zoh(vsc);
+                    end
+                    %delay
+                    if T_VSC.tau_cmd(vsc) == -1
+                        phase_delay = 0;
+                    else
+                        a = [12*T_VSC.tau_cmd(vsc)^2 -60*T_VSC.tau_cmd(vsc) 120];
+                        b = [12*T_VSC.tau_cmd(vsc)^2 60*T_VSC.tau_cmd(vsc) 120];
+
+                        [Ass,Bss,Css,Dss] = tf2ss(a,b);
+                        x = {'x1';'x2'};
+                        u = {'u'};
+                        y = {'y'};
+                        delay = ss(Ass,Bss,Css,Dss,'statename',x,'inputname',u,'outputname',y);
+                        [mag,phase,wout] = bode(delay,2*pi*50);
+                        phase_delay = -2*pi*50*1*T_VSC.tau_cmd(vsc);
+                    end
+
+                    theta_in_filt = theta_in + phase_btwf+phase_zoh+phase_delay; % angle including filters
+                    %theta_in_filt = theta_in + phase_delay;
+                    %theta_in_filt = theta_in + phase_delay;
+                    theta_nou = theta_in - phase_btwf - phase_zoh;
+                    
+                    Icap     = U/(Rac-1i/(wb*Cac));             % current through capacitor
+                    Ucap     = U - Rac*Icap;
+                    theta_ucap = atan2(imag(Ucap),real(Ucap));
+                    Is       = Ig + Icap;                       % converter filter current
+                    phi_is   = atan2(imag(Is),real(Is));
+                    Vc       = U + Is*(Rc+1i*Xc);               % voltage applied by the converter
+                    theta_vc = atan2(imag(Vc),real(Vc)); 
+
+                else
+
+                    % RL filter (no capacitor)
+                    Is       = conj((Pvsc0+1i*Qvsc0)./(3*Vg));  % converter filter current
+                    phi_is      = atan2(imag(Is),real(Is));     % angle of converter filter current
+                    U        = Vg + Is*(Rtr+1i*Xtr);            % Voltage at capacitor bus
+                    theta_in = atan2(imag(U),real(U));          % angle between POC and capacitor bus                
+                    Vc       = U + Is*(Rc+1i*Xc);               % voltage applied by the converter
+                    theta_vc = atan2(imag(Vc),real(Vc));
+
+                    % Additional variables
+                    Ig = Is;
+                    phi = phi_is;
+                    Ucap = U;
+                    theta_ucap = 0;
+                end
+        end
+
+
+        % Calculate angles
+        delta_bus = delta0 - delta_slk;            % NET-POC
+        e_theta0  = delta0 + theta_in - delta_slk;% - phase_btwf - phase_zoh; % VSC-POC
+        if isequal(mode,'WT')
+            e_theta0_cmd = delta0 + theta_in -delta_slk +phase_btwf + phase_zoh;
+            e_theta0_cmd_neg = delta0 + theta_in -delta_slk -phase_btwf - phase_zoh;
+            e_theta0_filt = delta0 + theta_in_filt -delta_slk; %VSC-POC plus filters!
+            e_theta0_delay = delta0 + theta_in + phase_delay -delta_slk;
+            e_theta0_delay2 = delta0 + theta_in + phase_delay + phase_btwf + phase_zoh -delta_slk;
+            e_theta0_delay2_neg = delta0 + theta_in + phase_delay - phase_btwf - phase_zoh -delta_slk;
+            e_theta0_delay_neg = delta0 + theta_in + phase_delay - phase_btwf - phase_zoh -delta_slk;
+        end
+        %e_theta0 = delta0 -delta_slk;
+        % Initial values in qd referenced to GLOBAL REF (add delta_bus: delta0-delta_slk)
+        
+        % qd GRID voltage (REF:GLOBAL)
+        vg_q0 = abs(Vg).*cos(delta_bus)*sqrt(2);
+        vg_d0 = -abs(Vg).*sin(delta_bus)*sqrt(2);
+        
+        % VSC current (REF:GLOBAL)
+        is_q0 = abs(Is).*cos(delta_bus  + phi_is)*sqrt(2);
+        is_d0 = -abs(Is).*sin(delta_bus + phi_is)*sqrt(2);
+        
+        % qd converter voltage (REF:GLOBAL)
+        vc_q0 = abs(Vc).*cos(delta_bus + theta_vc)*sqrt(2); 
+        vc_d0 = -abs(Vc).*sin(delta_bus + theta_vc)*sqrt(2); 
+        
+        % Capacitor voltage GLOBAL
+        ucap_q0 = abs(Ucap).*cos(delta_bus + theta_ucap)*sqrt(2);
+        ucap_d0 = -abs(Ucap).*sin(delta_bus + theta_ucap)*sqrt(2);
+
+        % qd TRAFO current (REF:GLOBAL)
+        ig_q0 = abs(Ig).*cos(delta_bus  + phi)*sqrt(2);
+        ig_d0 = -abs(Ig).*sin(delta_bus + phi)*sqrt(2);
+
+        % qd VSC-PCC voltage (REF:GLOBAL)
+        u_q0 = abs(U).*cos(e_theta0)*sqrt(2);
+        u_d0 = -abs(U).*sin(e_theta0)*sqrt(2);
+        
+        % Initial values in qd referenced to VSC REF 
+        % qd converter voltage (REF:LOCAL)
+        [vg_qc0,vg_dc0] = rotation_vect(real(Vg)*sqrt(2), -imag(Vg)*sqrt(2), theta_in);
+        % qd converter voltage (REF:LOCAL)
+        [vc_qc0,vc_dc0] = rotation_vect(real(Vc)*sqrt(2), -imag(Vc)*sqrt(2), theta_in);                
+        % qd VSC-POC voltage (REF:LOCAL)
+        [u_qc0,u_dc0] = rotation_vect(real(U)*sqrt(2), -imag(U)*sqrt(2), theta_in);                
+        % qd VSC current (REF:LOCAL)
+        [is_qc0,is_dc0] = rotation_vect(real(Is)*sqrt(2), -imag(Is)*sqrt(2), theta_in);
+        % qd VSC-POC grid current (REF:LOCAL)
+        [ig_qc0,ig_dc0] = rotation_vect(real(Ig)*sqrt(2), -imag(Ig)*sqrt(2), theta_in);
+
+        % PEAK base - Initial values in qd referenced to VSC REF 
+        % qd converter voltage (REF:LOCAL)
+        [vg_qc0_p,vg_dc0_p] = rotation_vect(real(Vg)*sqrt(3), -imag(Vg)*sqrt(3), theta_in);
+        % qd converter voltage (REF:LOCAL)
+        [vc_qc0_p,vc_dc0_p] = rotation_vect(real(Vc)*sqrt(3), -imag(Vc)*sqrt(3), theta_in);
+        if isequal(mode,'WT')
+            [vc_qc0_m,vc_dc0_m] = rotation_vect(real(Vc)*sqrt(3), -imag(Vc)*sqrt(3), theta_in_filt); 
+        end
+        % qd VSC-POC voltage (REF:LOCAL)
+        [u_qc0_p,u_dc0_p] = rotation_vect(real(U)*sqrt(3), -imag(U)*sqrt(3), theta_in);                
+        % qd VSC current (REF:LOCAL)
+        [is_qc0_p,is_dc0_p] = rotation_vect(real(Is)*sqrt(3), -imag(Is)*sqrt(3), theta_in);
+        % qd VSC-POC grid current (REF:LOCAL)
+        [ig_qc0_p,ig_dc0_p] = rotation_vect(real(Ig)*sqrt(3), -imag(Ig)*sqrt(3), theta_in);
+
+
+        lp.Pdc0 = (3/2*vc_q0*is_q0 + 3/2*vc_d0*is_d0);
+        lp.idc0 = lp.Pdc0/2;
+        
+        % Store linearization point
+        lp.u_q0  = u_q0;
+        lp.u_d0  = u_d0;
+        lp.ig_q0 = ig_q0;  
+        lp.ig_d0 = ig_d0;
+        lp.ig_qc0 = ig_qc0;  
+        lp.ig_dc0 = ig_dc0;  
+        lp.ig_qc0_p = ig_qc0_p;  
+        lp.ig_dc0_p = ig_dc0_p;  
+        lp.is_q0 = is_q0; 
+        lp.is_d0 = is_d0;
+        lp.ucap_q0 = ucap_q0; 
+        lp.ucap_d0 = ucap_d0;                 
+        lp.u_qc0  = u_qc0;
+        lp.u_dc0  = u_dc0;
+        lp.u_qc0_p  = u_qc0_p;
+        lp.u_dc0_p  = u_dc0_p;
+        lp.vc_qc0 = vc_qc0; 
+        lp.vc_dc0 = vc_dc0;
+        lp.vc_qc0_p = vc_qc0_p; 
+        lp.vc_dc0_p = vc_dc0_p;
+        lp.vc_q0 = vc_q0; 
+        lp.vc_d0 = vc_d0; 
+        lp.vg_q0 = vg_q0; 
+        lp.vg_d0 = vg_d0; 
+        lp.vg_qc0 = vg_qc0; 
+        lp.vg_dc0 = vg_dc0;
+        lp.vg_qc0_p = vg_qc0_p; 
+        lp.vg_dc0_p = vg_dc0_p; 
+        lp.is_qc0 = is_qc0;
+        lp.is_dc0 = is_dc0;
+        lp.is_qc0_p = is_qc0_p;
+        lp.is_dc0_p = is_dc0_p;
+        lp.w0_pu = 1;
+        lp.w0 = T_VSC.wb(vsc); 
+        lp.etheta0 = e_theta0; 
+        if isequal(mode,'WT')
+            lp.vc_qc0_m = vc_qc0_m; 
+            lp.vc_dc0_m = vc_dc0_m;
+            lp.e_theta0_cmd = e_theta0_cmd;
+            lp.e_theta0_cmd_neg = e_theta0_cmd_neg;
+            lp.e_theta0_filt = e_theta0_filt;
+            lp.e_theta0_delay = e_theta0_delay;
+            lp.e_theta0_delay2 = e_theta0_delay2;
+            lp.e_theta0_delay2_neg = e_theta0_delay2_neg;
+            lp.e_theta0_delay_neg = e_theta0_delay_neg;
+        end
+        
+        lp_vsc{vsc} = lp;
+    end
+end
