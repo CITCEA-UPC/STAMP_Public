@@ -9,13 +9,13 @@ addpath(genpath(pwd))
 %% SET INPUT DATA
 
 % Case name as in Excel files
-    caseName = 'WSCC_SG_GFOR_GFOL'; 
+    caseName = 'INELFE'; 
 
 % Relative path to the Folder for storing results
     path_results = '02_results\'; 
 
 % Set power-flow source (0: Excel, 1: STAMP POWER FLOW, 2: MATPOWER, 3: MATACDC) 
-    fanals = 2; 
+    fanals = 3; 
 
 %% READ GRID TOPOLOGY DATA
  
