@@ -10,7 +10,7 @@ This repository presents the Small-Signal Toolbox for Analysis of Modern Power S
 
 
 
-Interested users should download a local version of the repository. Aside from including all STAMP scripts in the MATLAB path, no other installation action is required. 
+Interested users should download a local version of the repository. Aside from including all STAMP scripts in the MATLAB path, no other installation action is required.
 
 
 
@@ -56,11 +56,17 @@ Beerten, Jef, and Ronnie Belmans. "Development of an open source power flow soft
 
 
 
+### Acknowledgement
+
+
+
+The development of STAMP was partially funded by the REFORMING Project (PID2021-127788OA-I00) supported by the Fondo Europeo de Desarrollo Regional/Ministerio de Ciencia e Innovación-Agencia Estatal de Investigación.
+
+
+
 ### Contact
 
 
 
 For any type of inquiry, please contact: dionysios.moutevelis@upc.edu, marc.cheah@upc.edu, josep.arevalo.soler@gmail.com
-
-
 
