@@ -70,5 +70,5 @@ The development of STAMP was partially funded by the REFORMING Project (PID2021-
 
 For any type of inquiry, please contact: dionysios.moutevelis@upc.edu, marc.cheah@upc.edu, josep.arevalo.soler@gmail.com
 
-![Visitas](https://visitor-badge.laobi.icu/badge?page_id=CITCEA-UPC.STAMP_Public)
+Visitors since 9-03-2026: ![Visitas](https://visitor-badge.laobi.icu/badge?page_id=CITCEA-UPC.STAMP_Public)
 
