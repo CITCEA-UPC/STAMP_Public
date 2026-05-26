@@ -1,6 +1,6 @@
 function [T_IPC] =  generate_parameters_IPC(T_IPC,T_global,excel_data_ipc) 
     
-     if isfile(['01_data\cases\' excel_data_ipc])
+     if isfile(fullfile('01_data', 'cases', excel_data_ipc))
         
         for vsc = 1:1:height(T_IPC)
     

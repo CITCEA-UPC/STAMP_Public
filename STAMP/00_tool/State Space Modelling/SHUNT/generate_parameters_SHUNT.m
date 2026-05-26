@@ -1,6 +1,6 @@
 function [T_shunt] =  generate_parameters_SHUNT(T_shunt,T_global,excel_data_shunt) 
     
-     if isfile(['01_data\cases\' excel_data_shunt])
+     if isfile(fullfile('01_data', 'cases', excel_data_shunt))
         
         for shunt_element = 1:1:height(T_shunt)
     

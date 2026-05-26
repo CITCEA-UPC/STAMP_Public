@@ -1,6 +1,6 @@
 function [T_SG] =  generate_parameters_SG(T_SG,T_global,excel_data_sg) 
 
-    if isfile(['01_data\cases\' excel_data_sg])
+    if isfile(fullfile('01_data', 'cases', excel_data_sg))
 
         types = sheetnames(excel_data_sg);
      

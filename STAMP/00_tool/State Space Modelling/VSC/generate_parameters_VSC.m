@@ -1,6 +1,6 @@
 function [T_VSC] =  generate_parameters_VSC(T_VSC,T_global,excel_data_vsc) 
     
-     if isfile(['01_data\cases\' excel_data_vsc])
+     if isfile(fullfile('01_data', 'cases', excel_data_vsc))
         
         for vsc = 1:1:height(T_VSC)
     
